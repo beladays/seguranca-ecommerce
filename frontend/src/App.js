@@ -1,17 +1,17 @@
 import { useState } from "react";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [mfa, setMfa] = useState(false);
   const [code, setCode] = useState("");
-  const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   const login = async () => {
     setLoading(true);
-    setMsg("");
 
     try {
       const res = await axios.post("http://localhost:3001/login", {
@@ -21,10 +21,11 @@ function App() {
 
       if (res.data.mfa) {
         setMfa(true);
-        setMsg("Digite o código MFA");
+
+        toast.success("Código MFA enviado: " + res.data.code);
       }
     } catch {
-      setMsg("❌ Email ou senha inválidos");
+      toast.error("❌ Email ou senha inválidos");
     }
 
     setLoading(false);
@@ -32,19 +33,27 @@ function App() {
 
   const validarMFA = async () => {
     setLoading(true);
-    setMsg("");
 
     try {
       await axios.post("http://localhost:3001/mfa", {
-        code
+        code: code.trim()
       });
 
-      setMsg("✅ Login realizado com sucesso!");
+      toast.success("✅ Login realizado com sucesso!");
     } catch {
-      setMsg("❌ Código MFA inválido");
+      toast.error("❌ Código inválido");
     }
 
     setLoading(false);
+  };
+
+  const reenviarCodigo = async () => {
+    try {
+      const res = await axios.get("http://localhost:3001/resend-mfa");
+      toast.info("Novo código: " + res.data.code);
+    } catch {
+      toast.error("Erro ao reenviar código");
+    }
   };
 
   return (
@@ -90,11 +99,18 @@ function App() {
             >
               {loading ? "Validando..." : "Validar Código"}
             </button>
+
+            <button
+              style={{ ...styles.button, background: "#6c757d" }}
+              onClick={reenviarCodigo}
+            >
+              Reenviar código
+            </button>
           </>
         )}
-
-        <p style={styles.msg}>{msg}</p>
       </div>
+
+      <ToastContainer />
     </div>
   );
 }
@@ -121,8 +137,7 @@ const styles = {
     padding: 10,
     width: "100%",
     borderRadius: 8,
-    border: "1px solid #ccc",
-    outline: "none"
+    border: "1px solid #ccc"
   },
   button: {
     padding: 10,
@@ -133,10 +148,6 @@ const styles = {
     borderRadius: 8,
     cursor: "pointer",
     marginTop: 10
-  },
-  msg: {
-    marginTop: 15,
-    fontWeight: "bold"
   }
 };
 
