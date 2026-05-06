@@ -14,9 +14,29 @@ const SECRET = "segredo_super";
 // 🛡️ proteção DDoS (rate limit)
 const limiter = rateLimit({
   windowMs: 1 * 60 * 1000, // 1 min
-  max: 5 // 5 requisições por minuto
+  max: 5
 });
 app.use(limiter);
+
+// 🔒 CONFIGURAÇÃO AES (compatível com Node 22)
+const algorithm = "aes-256-cbc";
+const key = crypto.createHash("sha256").update("chave123").digest();
+const iv = Buffer.alloc(16, 0);
+
+// 🔒 função AES (corrigida)
+function encrypt(text) {
+  const cipher = crypto.createCipheriv(algorithm, key, iv);
+  let encrypted = cipher.update(text, "utf8", "hex");
+  encrypted += cipher.final("hex");
+  return encrypted;
+}
+
+function decrypt(text) {
+  const decipher = crypto.createDecipheriv(algorithm, key, iv);
+  let decrypted = decipher.update(text, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  return decrypted;
+}
 
 // 👤 usuário fake
 let user = {
@@ -24,21 +44,6 @@ let user = {
   senha: encrypt("123456"),
   mfaCode: "123456"
 };
-
-// 🔒 função AES
-function encrypt(text) {
-  const cipher = crypto.createCipher("aes-256-cbc", "chave123");
-  let encrypted = cipher.update(text, "utf8", "hex");
-  encrypted += cipher.final("hex");
-  return encrypted;
-}
-
-function decrypt(text) {
-  const decipher = crypto.createDecipher("aes-256-cbc", "chave123");
-  let decrypted = decipher.update(text, "hex", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
-}
 
 // 📌 LOGIN
 app.post("/login", (req, res) => {
@@ -72,4 +77,5 @@ app.get("/dados", (req, res) => {
   res.json({ mensagem: "Dados protegidos com segurança!" });
 });
 
+// 🚀 iniciar servidor
 app.listen(3001, () => console.log("Servidor rodando na porta 3001"));
