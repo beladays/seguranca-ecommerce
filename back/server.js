@@ -8,17 +8,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🔐 segredo JWT
+
 const SECRET = "segredo_super";
 
-// 🛡️ proteção DDoS
+//ddos contra
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 5
 });
 app.use(limiter);
 
-// 🔒 AES config
+//aes
 const algorithm = "aes-256-cbc";
 const key = crypto.createHash("sha256").update("chave123").digest();
 const iv = Buffer.alloc(16, 0);
@@ -37,14 +37,14 @@ function decrypt(text) {
   return decrypted;
 }
 
-// 👤 usuário fake
+// user
 let user = {
   email: "teste@email.com",
   senha: encrypt("123456"),
   mfaCode: "123456"
 };
 
-// 📌 LOGIN
+// logar
 app.post("/login", (req, res) => {
   const { email, senha } = req.body;
 
@@ -61,7 +61,7 @@ app.post("/login", (req, res) => {
   res.status(401).json({ error: "Credenciais inválidas" });
 });
 
-// 📌 VALIDAR MFA
+// validar multifator
 app.post("/mfa", (req, res) => {
   const { code } = req.body;
 
@@ -76,7 +76,7 @@ app.post("/mfa", (req, res) => {
   res.status(401).json({ error: "Código inválido" });
 });
 
-// 📌 REENVIAR MFA
+// podr reenviar codigo
 app.get("/resend-mfa", (req, res) => {
   console.log("Reenviando código MFA");
 
@@ -85,7 +85,7 @@ app.get("/resend-mfa", (req, res) => {
   });
 });
 
-// 📌 rota protegida
+
 app.get("/dados", (req, res) => {
   res.json({ mensagem: "Dados protegidos com segurança!" });
 });
